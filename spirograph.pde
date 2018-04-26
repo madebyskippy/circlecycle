@@ -1,4 +1,15 @@
 //circle cycles
+
+import processing.serial.*;
+// ------------------------- make this true when the arduino is connected
+boolean arduino = true;
+// -------------------------
+
+Serial myPort;  // Create object from Serial class
+int val1;      // Data received from the serial port
+int val2;      // Data received from the serial port
+int val3;      // Data received from the serial port
+
 //number of circles
 int num = 3;
 
@@ -26,6 +37,12 @@ PFont font;
 int currentCirc; //for selecting with arrow keys
 
 void setup(){
+  if (arduino){
+    println(Serial.list());
+    String portName = Serial.list()[9];
+    myPort = new Serial(this, portName, 9600);
+  }
+  
   size(1280,720);
   
   font = loadFont("Monospaced-48.vlw");
@@ -57,6 +74,19 @@ void setup(){
 }
 
 void draw(){
+  
+  if (arduino){
+    if ( myPort.available() > 0) {  // If data is available,
+      val1 = myPort.read();         // read it and store it in val
+      val2 = myPort.read();         // read it and store it in val
+      val3 = myPort.read();         // read it and store it in val
+      println(val1+","+val2+","+val3);
+      radius[0] = 30 + 10*val1;
+      radius[1] = 30 + 10*val2;
+      radius[2] = 30 + 10*val3;
+    }
+  }
+  
   background(0);
   
   noFill();
