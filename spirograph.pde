@@ -81,9 +81,9 @@ void draw(){
       val2 = myPort.read();         // read it and store it in val
       val3 = myPort.read();         // read it and store it in val
       println(val1+","+val2+","+val3);
-      radius[0] = 30 + 10*val1;
-      radius[1] = 30 + 10*val2;
-      radius[2] = 30 + 10*val3;
+      radius[0] = lerp(radius[0],30 + 10*val1,0.1);
+      radius[1] = lerp(radius[1],30 + 10*val2,0.1);
+      radius[2] = lerp(radius[2],30 + 10*val3,0.1);
     }
   }
   
@@ -95,7 +95,7 @@ void draw(){
   for (int i=0; i<3; i++){
     text(str(i+1),100+75*i,50);
     ellipse(100+75*i,50,50,50);
-    text(str(radius[i]),100+75*i,100);
+    text(str(round(radius[i])),100+75*i,100);
   }
   ellipse(100+75*currentCirc,50,40,40);
   
@@ -111,14 +111,14 @@ void draw(){
   for (int i=1; i<radius.length; i++){
     PVector c = circ(d*speeds[i-1],radius[i-1],centers[i-1]);
     centers[i] = c;
-    stroke(255,255,0,100);
+    stroke(255,255,0,200);
     ellipse(c.x,c.y,radius[i]*2,radius[i]*2);
     stroke(255,255,100,150);
     line(centers[i-1].x,centers[i-1].y,centers[i].x,centers[i].y);
   }
   
   //first circle
-  stroke(255,255,0,100);
+  stroke(255,255,0,200);
   ellipse(centers[0].x,centers[0].y,radius[0]*2,radius[0]*2);
   //and last line
   stroke(255,255,100,150);
@@ -148,7 +148,7 @@ void draw(){
 
 void drawLine(){
   for (int i=1; i<points.size(); i++){
-    stroke(255,pow(float(i) / float(points.size()),2) * 255);
+    stroke(255,pow(float(i) / float(points.size()),2) * 200);
     line(points.get(i-1).x,points.get(i-1).y,points.get(i).x,points.get(i).y);
   }
 }
