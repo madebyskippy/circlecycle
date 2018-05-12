@@ -46,6 +46,8 @@ float[][][] lvls = new float[][][]{{{50,105,40},{1,-.2,1.8}},
                                {{50,105,40},{1,.1,-2.6}},
                                {{100,50,25},{1,-2.1,-2.1}},
                                {{100,50,50},{1,1,2.9}}};
+                               
+int level;
 
 //these get calculated
 PVector[] centers;
@@ -60,8 +62,9 @@ float rate = 2;
 
 int counter;
 
-int level;
-boolean solved;
+PVector target;
+int hit;
+ArrayList<PVector> targetshit;
 
 PFont font;
 int currentCirc; //for selecting with arrow keys
@@ -75,8 +78,6 @@ void setup(){
   
   //size(1280,720);
   fullScreen();
-  
-  solved = false;
   
   font = loadFont("Monospaced-48.vlw");
   textFont(font,15);
@@ -95,6 +96,10 @@ void setup(){
   }
   
   points = new ArrayList<PVector>();
+  targetshit = new ArrayList<PVector>();
+  
+  newTarget();
+  hit = 0;
   
   centers = new PVector[num];
   for (int i=0; i<centers.length; i++){
@@ -124,13 +129,22 @@ void draw(){
   
   noFill();
   
-  text("size",40,50);
-  for (int i=0; i<3; i++){
-    text(str(i+1),100+75*i,50);
-    ellipse(100+75*i,50,50,50);
-    text(str(round(radius[i])),100+75*i,100);
-  }
-  ellipse(100+75*currentCirc,50,40,40);
+  //text("size",40,50);
+  //for (int i=0; i<3; i++){
+  //  text(str(i+1),100+75*i,50);
+  //  ellipse(100+75*i,50,50,50);
+  //  text(str(round(radius[i])),100+75*i,100);
+  //}
+  //ellipse(100+75*currentCirc,50,40,40);
+  
+  stroke(255);
+  //ellipse(target.x,target.y,50,50);
+  //ellipse(target.x,target.y,30,30);
+  arc(target.x-30,target.y-50,60,100,0,HALF_PI);
+  arc(target.x+30,target.y-50,60,100,HALF_PI,HALF_PI*2);
+  arc(target.x+30,target.y+50,60,100,HALF_PI*2,HALF_PI*3);
+  arc(target.x-30,target.y+50,60,100,HALF_PI*3,HALF_PI*4);
+  ellipse(target.x,target.y,10,10);
   
   float d=counter*rate;
   counter++;
@@ -141,6 +155,28 @@ void draw(){
   }
   
   PVector last = circ(d*speeds[speeds.length-1],radius[radius.length-1],centers[centers.length-1]);
+  
+  stroke(255,232,161);
+  arc(last.x-10,last.y-20,20,40,0,HALF_PI);
+  arc(last.x+10,last.y-20,20,40,HALF_PI,HALF_PI*2);
+  arc(last.x+10,last.y+20,20,40,HALF_PI*2,HALF_PI*3);
+  arc(last.x-10,last.y+20,20,40,HALF_PI*3,HALF_PI*4);
+  
+  if (dist(last.x,last.y,target.x,target.y) < 50){
+    hit ++;
+    targetshit.add(target);
+    newTarget();
+  }
+  
+  for (int i=0; i<hit; i++){
+    //ellipse(width-50-20*i,height-50,5,5);
+    stroke(255,50);
+    //ellipse(targetshit.get(i).x,targetshit.get(i).y,10,10);
+    arc(targetshit.get(i).x-15,targetshit.get(i).y-25,30,50,0,HALF_PI);
+    arc(targetshit.get(i).x+15,targetshit.get(i).y-25,30,50,HALF_PI,HALF_PI*2);
+    arc(targetshit.get(i).x+15,targetshit.get(i).y+25,30,50,HALF_PI*2,HALF_PI*3);
+    arc(targetshit.get(i).x-15,targetshit.get(i).y+25,30,50,HALF_PI*3,HALF_PI*4);
+  }
   
   if (points.size()>totalPoints){
     points.remove(0);
@@ -156,7 +192,7 @@ void draw(){
 
 void drawPath(){
   for (int i=1; i<points.size(); i++){
-    stroke(255,232,161,float(i) / float(points.size()) * 200);
+    stroke(255,232,161,float(i) / float(points.size()) * 100);
     line(points.get(i-1).x,points.get(i-1).y,points.get(i).x,points.get(i).y);
   }
 }
@@ -184,19 +220,6 @@ PVector circ(float deg, float rad, PVector center){
   x = center.x + rad * cos(radians(deg) +PI/2);
   y = center.y + rad * sin(radians(deg) +PI/2);
   return new PVector(x,y);
-}
-
-void checkAnswer(){
-  boolean right = true;
-  for (int i=0; i<radius.length; i++){
-    if (radius[i] != lvls[level][0][i]){
-      right = false;
-    }
-    if (speeds[i] != lvls[level][1][i]){
-      right = false;
-    }
-  }
-  solved = right;
 }
 
 void keyPressed(){
