@@ -1,7 +1,5 @@
 //circle cycles
 /*
--map out how people will come up to the experience, and the script of what you'll say
-
 -make sure there's good feedback for every input, so it's not too obfuscated and confusing
 -good feedback for things achieved so you feel good doing the actions
 
@@ -56,7 +54,7 @@ PVector[] centers;
 ArrayList<PVector> points;
 ArrayList<PVector> preview;
 
-int totalPoints = 360*5;
+int totalPoints = 360;
 
 float rate = 2;
 
@@ -71,7 +69,7 @@ int currentCirc; //for selecting with arrow keys
 void setup(){
   if (arduino){
     println(Serial.list());
-    String portName = Serial.list()[9];
+    String portName = Serial.list()[7];
     myPort = new Serial(this, portName, 9600);
   }
   
@@ -91,8 +89,8 @@ void setup(){
   
   level = floor(random(0,lvls.length));
   for (int i=0; i<radius.length; i++){
-    //radius[i] = (int)random(100,300);
-    radius[i] = lvls[level][0][i]*4;
+    radius[i] = (int)random(100,300);
+    //radius[i] = lvls[level][0][i]*4;
     speeds[i] = lvls[level][1][i];
   }
   
@@ -100,10 +98,12 @@ void setup(){
   
   centers = new PVector[num];
   for (int i=0; i<centers.length; i++){
-    centers[i] = new PVector(width/2,height/1.75);
+    centers[i] = new PVector(width/2,height/2);
   }
   
   background(0);
+  
+  strokeWeight(3);
 }
 
 void draw(){
@@ -114,9 +114,9 @@ void draw(){
       val2 = myPort.read();         // read it and store it in val
       val3 = myPort.read();         // read it and store it in val
       println(val1+","+val2+","+val3);
-      radius[0] = lerp(radius[0],30 + 10*val1,0.075);
-      radius[1] = lerp(radius[1],30 + 10*val2,0.075);
-      radius[2] = lerp(radius[2],30 + 10*val3,0.075);
+      radius[0] = lerp(radius[0],100 + 20*val1,0.075);
+      radius[1] = lerp(radius[1],100 + 20*val2,0.075);
+      radius[2] = lerp(radius[2],100 + 20*val3,0.075);
     }
   }
   
@@ -138,44 +138,44 @@ void draw(){
   for (int i=1; i<radius.length; i++){
     PVector c = circ(d*speeds[i-1],radius[i-1],centers[i-1]);
     centers[i] = c;
-    stroke(circlecolors[i],200);
-    ellipse(c.x,c.y,radius[i]*2,radius[i]*2);
-    
-    noStroke();
-    fill(circlecolors[i],50);
-    ellipse(c.x,c.y,lvls[level][0][i]*8,lvls[level][0][i]*8);
-    
-    noFill();
-    stroke(circlecolors[i-1],150);
-    line(centers[i-1].x,centers[i-1].y,centers[i].x,centers[i].y);
   }
   
-  //first circle
-  stroke(circlecolors[0],200);
-  ellipse(centers[0].x,centers[0].y,radius[0]*2,radius[0]*2);    
-  noStroke();
-  fill(circlecolors[0],50);
-  ellipse(centers[0].x,centers[0].y,lvls[level][0][0]*8,lvls[level][0][0]*8);
-  
-  noFill();
-  //and last line
-  stroke(circlecolors[2],150);
   PVector last = circ(d*speeds[speeds.length-1],radius[radius.length-1],centers[centers.length-1]);
-  line (centers[centers.length-1].x,centers[centers.length-1].y, last.x, last.y);
   
   if (points.size()>totalPoints){
     points.remove(0);
   }
   points.add(last);
   
-  drawLine();
+  drawCircle(0);
+  drawCircle(1);
+  drawCircle(2);
+  
+  drawPath();
 }
 
-void drawLine(){
+void drawPath(){
   for (int i=1; i<points.size(); i++){
-    stroke(255,232,161,pow(float(i) / float(points.size()),2) * 200);
+    stroke(255,232,161,float(i) / float(points.size()) * 200);
     line(points.get(i-1).x,points.get(i-1).y,points.get(i).x,points.get(i).y);
   }
+}
+
+void drawCircle(int i){
+  stroke(circlecolors[i],200);
+  ellipse(centers[i].x,centers[i].y,radius[i]*2,radius[i]*2);    
+  
+  noFill();
+  stroke(circlecolors[i],150);
+  if (i>=2){
+    line (centers[i].x,centers[i].y, points.get(points.size()-1).x,points.get(points.size()-1).y);
+  }else{
+    line(centers[i].x,centers[i].y,centers[i+1].x,centers[i+1].y);
+  }
+}
+
+void newTarget(){
+  target = new PVector(width/2+(int)random(-400,400),height/2+(int)random(-200,200));
 }
 
 PVector circ(float deg, float rad, PVector center){
