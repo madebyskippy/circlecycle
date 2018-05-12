@@ -1,14 +1,6 @@
 //circle cycles
 /*
--make sure there's good feedback for every input, so it's not too obfuscated and confusing
--good feedback for things achieved so you feel good doing the actions
-
--maybe make all the circle sizes bigger so each change you make is much more obvious
--that will probably change a lot
-
--possible: make the goal to get a snowman of a certain size instead of hit a target...
--it's a more clear goal
--then the reward is the pattern the trail makes 
+-circle trail so you can tell when you changed it
 
 -sound
 */
@@ -28,6 +20,8 @@ int num = 3;
 color[] circlecolors = new color[]{ color(250,115,115),
                                     color(117,201,255),
                                     color(183,147,255)};
+float[][] circleSizes = new float[3][8];
+float[][] circleFades = new float[3][8];
 
 //modifyable stuffos
 float[] radius;
@@ -63,8 +57,11 @@ float rate = 2;
 int counter;
 
 PVector target;
+float targetSize = 1;
+int targetSizeDirection = 1;
 int hit;
 ArrayList<PVector> targetshit;
+ArrayList<PVector> targetshitSize;
 
 PFont font;
 int currentCirc; //for selecting with arrow keys
@@ -93,10 +90,15 @@ void setup(){
     radius[i] = (int)random(100,300);
     //radius[i] = lvls[level][0][i]*4;
     speeds[i] = lvls[level][1][i];
+    for (int j=0; j<circleSizes[i].length; j++){
+      circleSizes[i][j] = radius[i];
+      circleFades[i][j] = 0f;
+    }
   }
   
   points = new ArrayList<PVector>();
   targetshit = new ArrayList<PVector>();
+  targetshitSize = new ArrayList<PVector>();
   
   newTarget();
   hit = 0;
@@ -112,7 +114,7 @@ void setup(){
 }
 
 void draw(){
-  
+  //get arduino values
   if (arduino){
     if ( myPort.available() > 0) {  // If data is available,
       val1 = myPort.read();         // read it and store it in val
@@ -125,10 +127,23 @@ void draw(){
     }
   }
   
+  //get circle trail
+  for (int i=0; i<3; i++){
+    if (abs(radius[i]-circleSizes[i][0]) > 5){
+      for (int j=circleSizes[i].length-1; j>0; j--){
+        circleSizes[i][j] = circleSizes[i][j-1];
+        circleFades[i][j] = circleFades[i][j-1];
+      }
+      circleSizes[i][0] = radius[i];
+      circleFades[i][0] = 1f;
+    }
+  }
+  
   background(0);
   
   noFill();
   
+  //UI shit
   //text("size",40,50);
   //for (int i=0; i<3; i++){
   //  text(str(i+1),100+75*i,50);
@@ -137,56 +152,86 @@ void draw(){
   //}
   //ellipse(100+75*currentCirc,50,40,40);
   
-  stroke(255);
-  //ellipse(target.x,target.y,50,50);
-  //ellipse(target.x,target.y,30,30);
-  arc(target.x-30,target.y-50,60,100,0,HALF_PI);
-  arc(target.x+30,target.y-50,60,100,HALF_PI,HALF_PI*2);
-  arc(target.x+30,target.y+50,60,100,HALF_PI*2,HALF_PI*3);
-  arc(target.x-30,target.y+50,60,100,HALF_PI*3,HALF_PI*4);
-  ellipse(target.x,target.y,10,10);
-  
   float d=counter*rate;
   counter++;
   
+  //find updated centers of circles
   for (int i=1; i<radius.length; i++){
     PVector c = circ(d*speeds[i-1],radius[i-1],centers[i-1]);
     centers[i] = c;
   }
   
+  //find latest path point
   PVector last = circ(d*speeds[speeds.length-1],radius[radius.length-1],centers[centers.length-1]);
   
+  //check if you hit the target
+  if (dist(last.x,last.y,target.x,target.y) < 50){
+    hit ++;
+    targetshit.add(target);
+    int tw = (int)random(5,30);
+    int th = tw + (int)random(5,30);
+    targetshitSize.add(new PVector(tw,th));
+    newTarget();
+  }
+  
+  //dead stars
+  int w;
+  int h;
+  for (int i=0; i<hit; i++){
+    //ellipse(width-50-20*i,height-50,5,5);
+    stroke(255,50);
+    w = (int)targetshitSize.get(i).x;
+    h = (int)targetshitSize.get(i).y;
+    //ellipse(targetshit.get(i).x,targetshit.get(i).y,10,10);
+    arc(targetshit.get(i).x-w,targetshit.get(i).y-h,w*2,h*2,0,HALF_PI);
+    arc(targetshit.get(i).x+w,targetshit.get(i).y-h,w*2,h*2,HALF_PI,HALF_PI*2);
+    arc(targetshit.get(i).x+w,targetshit.get(i).y+h,w*2,h*2,HALF_PI*2,HALF_PI*3);
+    arc(targetshit.get(i).x-w,targetshit.get(i).y+h,w*2,h*2,HALF_PI*3,HALF_PI*4);
+  }
+  
+  //update path list
+  if (points.size()>totalPoints){
+    points.remove(0);
+  }
+  points.add(last);
+  
+  //draw circle trails
+  strokeWeight(1);
+  for (int i=0; i<3; i++){
+    for (int j=1; j<circleSizes[i].length; j++){
+      stroke(255,175*(1-pow((float)j/(float)circleSizes[i].length,2))*circleFades[i][j]);
+      ellipse(centers[i].x,centers[i].y,circleSizes[i][j]*2,circleSizes[i][j]*2);
+      circleFades[i][j] *= 0.9925f;
+    }
+  }
+  strokeWeight(3);
+  
+  drawCircle(0);
+  drawCircle(1);
+  drawCircle(2);
+  
+  //draw star on end of 3 circles
   stroke(255,232,161);
   arc(last.x-10,last.y-20,20,40,0,HALF_PI);
   arc(last.x+10,last.y-20,20,40,HALF_PI,HALF_PI*2);
   arc(last.x+10,last.y+20,20,40,HALF_PI*2,HALF_PI*3);
   arc(last.x-10,last.y+20,20,40,HALF_PI*3,HALF_PI*4);
   
-  if (dist(last.x,last.y,target.x,target.y) < 50){
-    hit ++;
-    targetshit.add(target);
-    newTarget();
+  //draw target
+  stroke(255);
+  targetSize = targetSize - 0.01 * targetSizeDirection;
+  if (targetSize < 0.75 || targetSize > 1){
+    targetSizeDirection *= -1;
   }
+  w=(int)(30*targetSize);
+  h=(int)(50*targetSize);
+  arc(target.x-w,target.y-h,w*2,h*2,0,HALF_PI);
+  arc(target.x+w,target.y-h,w*2,h*2,HALF_PI,HALF_PI*2);
+  arc(target.x+w,target.y+h,w*2,h*2,HALF_PI*2,HALF_PI*3);
+  arc(target.x-w,target.y+h,w*2,h*2,HALF_PI*3,HALF_PI*4);
+  ellipse(target.x,target.y,10,10);
   
-  for (int i=0; i<hit; i++){
-    //ellipse(width-50-20*i,height-50,5,5);
-    stroke(255,50);
-    //ellipse(targetshit.get(i).x,targetshit.get(i).y,10,10);
-    arc(targetshit.get(i).x-15,targetshit.get(i).y-25,30,50,0,HALF_PI);
-    arc(targetshit.get(i).x+15,targetshit.get(i).y-25,30,50,HALF_PI,HALF_PI*2);
-    arc(targetshit.get(i).x+15,targetshit.get(i).y+25,30,50,HALF_PI*2,HALF_PI*3);
-    arc(targetshit.get(i).x-15,targetshit.get(i).y+25,30,50,HALF_PI*3,HALF_PI*4);
-  }
-  
-  if (points.size()>totalPoints){
-    points.remove(0);
-  }
-  points.add(last);
-  
-  drawCircle(0);
-  drawCircle(1);
-  drawCircle(2);
-  
+  //draw path
   drawPath();
 }
 
@@ -211,7 +256,7 @@ void drawCircle(int i){
 }
 
 void newTarget(){
-  target = new PVector(width/2+(int)random(-400,400),height/2+(int)random(-200,200));
+  target = new PVector(width/2+(int)random(-700,700),height/2+(int)random(-400,400));
 }
 
 PVector circ(float deg, float rad, PVector center){
@@ -228,9 +273,9 @@ void keyPressed(){
   }
   if (key == CODED) {
     if (keyCode == UP) {
-      radius[currentCirc] = min(radius[currentCirc]+1,200);
+      radius[currentCirc] = min(radius[currentCirc]+1,300);
     } else if (keyCode == DOWN) {
-      radius[currentCirc] = max(radius[currentCirc]-1,0);
+      radius[currentCirc] = max(radius[currentCirc]-1,10);
     } else if (keyCode == LEFT) {
       if (currentCirc == 0){
         currentCirc = 2;
