@@ -8,10 +8,11 @@
 import processing.serial.*;
 import ddf.minim.*;
 // ------------------------- make this true when the arduino is connected
-boolean arduino = false;
+boolean arduino = true;
 // -------------------------
 
 Serial myPort;  // Create object from Serial class
+int[] vals = new int[3];
 int val1;      // Data received from the serial port
 int val2;      // Data received from the serial port
 int val3;      // Data received from the serial port
@@ -133,10 +134,28 @@ void draw(){
       val1 = myPort.read();         // read it and store it in val
       val2 = myPort.read();         // read it and store it in val
       val3 = myPort.read();         // read it and store it in val
+      if (val1<100){
+        vals[0] = val1;
+      }
+      if (val2 >= 100 && val2 < 200){
+        vals[1] = val2-100;
+      }
+      if (val3 >= 200){
+        vals[2] = val3-200;
+      }
       //println(val1+","+val2+","+val3);
-      radius[0] = lerp(radius[0],100 + 20*val1,0.075);
-      radius[1] = lerp(radius[1],100 + 20*val2,0.075);
-      radius[2] = lerp(radius[2],100 + 20*val3,0.075);
+      int direction = 1;
+      for (int i=0; i<3; i++){
+        if ((100 + 20*vals[i])>radius[i]){
+          radius[i] = min(radius[i] + 4,(100 + 20*vals[i]));
+        }
+        if ((100 + 20*vals[i])<radius[i]){
+          radius[i] = max(radius[i] - 4,(100 + 20*vals[i]));
+        }
+      }
+      //radius[0] = lerp(radius[0],100 + 20*val1,0.075);
+      //radius[1] = lerp(radius[1],100 + 20*val2,0.075);
+      //radius[2] = lerp(radius[2],100 + 20*val3,0.075);
     }
   }
   
