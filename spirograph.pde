@@ -6,6 +6,7 @@
 */
 
 import processing.serial.*;
+import ddf.minim.*;
 // ------------------------- make this true when the arduino is connected
 boolean arduino = false;
 // -------------------------
@@ -15,6 +16,10 @@ int val1;      // Data received from the serial port
 int val2;      // Data received from the serial port
 int val3;      // Data received from the serial port
 
+Minim minim;
+AudioPlayer[] backgNoise = new AudioPlayer[8];
+AudioPlayer[] starNoise = new AudioPlayer[8];
+
 //number of circles
 int num = 3;
 color[] circlecolors = new color[]{ color(250,115,115),
@@ -22,6 +27,7 @@ color[] circlecolors = new color[]{ color(250,115,115),
                                     color(183,147,255)};
 float[][] circleSizes = new float[3][8];
 float[][] circleFades = new float[3][8];
+int[] circlePitch = new int[]{0,0,0};
 
 //modifyable stuffos
 float[] radius;
@@ -76,9 +82,16 @@ void setup(){
   //size(1280,720);
   fullScreen();
   
+  minim = new Minim(this);
+  for (int i=0; i<8; i++){
+    backgNoise[i] = minim.loadFile("hit"+str(i+1)+".mp3");
+    starNoise[i] = minim.loadFile("side"+str(i+1)+".mp3");
+  }
+  
   font = loadFont("Monospaced-48.vlw");
   textFont(font,15);
   textAlign(CENTER, CENTER);
+  
   currentCirc = 0;
   
   radius = new float[]{50,105,40}; //MODIFY
@@ -120,7 +133,7 @@ void draw(){
       val1 = myPort.read();         // read it and store it in val
       val2 = myPort.read();         // read it and store it in val
       val3 = myPort.read();         // read it and store it in val
-      println(val1+","+val2+","+val3);
+      //println(val1+","+val2+","+val3);
       radius[0] = lerp(radius[0],100 + 20*val1,0.075);
       radius[1] = lerp(radius[1],100 + 20*val2,0.075);
       radius[2] = lerp(radius[2],100 + 20*val3,0.075);
@@ -129,7 +142,7 @@ void draw(){
   
   //get circle trail
   for (int i=0; i<3; i++){
-    if (abs(radius[i]-circleSizes[i][0]) > 5){
+    if (abs(radius[i]-circleSizes[i][0]) > 10){
       for (int j=circleSizes[i].length-1; j>0; j--){
         circleSizes[i][j] = circleSizes[i][j-1];
         circleFades[i][j] = circleFades[i][j-1];
@@ -166,6 +179,11 @@ void draw(){
   
   //check if you hit the target
   if (dist(last.x,last.y,target.x,target.y) < 50){
+    int soundIndex = (int)((float)(target.y-(height/2-400))/(float)(800f/3f));
+    soundIndex += (int)((float)(target.x-(width/2-600))/(float)(1200f/3f));
+    starNoise[soundIndex].rewind();
+    starNoise[soundIndex].play();
+    
     hit ++;
     targetshit.add(target);
     int tw = (int)random(5,30);
@@ -199,9 +217,9 @@ void draw(){
   strokeWeight(1);
   for (int i=0; i<3; i++){
     for (int j=1; j<circleSizes[i].length; j++){
-      stroke(255,175*(1-pow((float)j/(float)circleSizes[i].length,2))*circleFades[i][j]);
+      stroke(circlecolors[i],175*(1-pow((float)j/(float)circleSizes[i].length,2))*circleFades[i][j]);
       ellipse(centers[i].x,centers[i].y,circleSizes[i][j]*2,circleSizes[i][j]*2);
-      circleFades[i][j] *= 0.9925f;
+      circleFades[i][j] *= 0.95f;
     }
   }
   strokeWeight(3);
@@ -253,10 +271,17 @@ void drawCircle(int i){
   }else{
     line(centers[i].x,centers[i].y,centers[i+1].x,centers[i+1].y);
   }
+  
+  int pitch = (int)((max(radius[i],100)-100)/67);
+  if (pitch != circlePitch[i]){
+    circlePitch[i] = pitch;
+    backgNoise[i*3+circlePitch[i]].rewind();
+    backgNoise[i*3+circlePitch[i]].play();
+  }
 }
 
 void newTarget(){
-  target = new PVector(width/2+(int)random(-700,700),height/2+(int)random(-400,400));
+  target = new PVector(width/2+(int)random(-600,600),height/2+(int)random(-400,400));
 }
 
 PVector circ(float deg, float rad, PVector center){
