@@ -8,7 +8,7 @@
 import processing.serial.*;
 import ddf.minim.*;
 // ------------------------- make this true when the arduino is connected
-boolean arduino = true;
+boolean arduino = false;
 // -------------------------
 
 Serial myPort;  // Create object from Serial class
@@ -127,6 +127,40 @@ void setup(){
   strokeWeight(3);
 }
 
+void reset(){
+  textFont(font,15);
+  textAlign(CENTER, CENTER);
+  
+  currentCirc = 0;
+  
+  level = floor(random(0,lvls.length));
+  for (int i=0; i<radius.length; i++){
+    radius[i] = (int)random(100,300);
+    //radius[i] = lvls[level][0][i]*4;
+    speeds[i] = lvls[level][1][i];
+    for (int j=0; j<circleSizes[i].length; j++){
+      circleSizes[i][j] = radius[i];
+      circleFades[i][j] = 0f;
+    }
+  }
+  
+  points = new ArrayList<PVector>();
+  targetshit = new ArrayList<PVector>();
+  targetshitSize = new ArrayList<PVector>();
+  
+  newTarget();
+  hit = 0;
+  
+  centers = new PVector[num];
+  for (int i=0; i<centers.length; i++){
+    centers[i] = new PVector(width/2,height/2);
+  }
+  
+  background(0);
+  
+  strokeWeight(3);
+}
+
 void draw(){
   //get arduino values
   if (arduino){
@@ -153,9 +187,6 @@ void draw(){
           radius[i] = max(radius[i] - 4,(100 + 20*vals[i]));
         }
       }
-      //radius[0] = lerp(radius[0],100 + 20*val1,0.075);
-      //radius[1] = lerp(radius[1],100 + 20*val2,0.075);
-      //radius[2] = lerp(radius[2],100 + 20*val3,0.075);
     }
   }
   
@@ -174,15 +205,6 @@ void draw(){
   background(0);
   
   noFill();
-  
-  //UI shit
-  //text("size",40,50);
-  //for (int i=0; i<3; i++){
-  //  text(str(i+1),100+75*i,50);
-  //  ellipse(100+75*i,50,50,50);
-  //  text(str(round(radius[i])),100+75*i,100);
-  //}
-  //ellipse(100+75*currentCirc,50,40,40);
   
   float d=counter*rate;
   counter++;
@@ -209,6 +231,10 @@ void draw(){
     int th = tw + (int)random(5,30);
     targetshitSize.add(new PVector(tw,th));
     newTarget();
+    
+    if (hit > 20){
+      reset();
+    }
   }
   
   //dead stars
@@ -313,7 +339,7 @@ PVector circ(float deg, float rad, PVector center){
 
 void keyPressed(){
   if (key == 'r' || key == 'R'){
-    setup();
+    reset();
   }
   if (key == CODED) {
     if (keyCode == UP) {
