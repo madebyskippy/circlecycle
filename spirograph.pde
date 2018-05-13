@@ -1,14 +1,9 @@
 //circle cycles
-/*
--circle trail so you can tell when you changed it
-
--sound
-*/
 
 import processing.serial.*;
 import ddf.minim.*;
 // ------------------------- make this true when the arduino is connected
-boolean arduino = false;
+boolean arduino = true;
 // -------------------------
 
 Serial myPort;  // Create object from Serial class
@@ -90,7 +85,7 @@ void setup(){
   }
   
   font = loadFont("Monospaced-48.vlw");
-  textFont(font,15);
+  textFont(font,25);
   textAlign(CENTER, CENTER);
   
   currentCirc = 0;
@@ -128,7 +123,7 @@ void setup(){
 }
 
 void reset(){
-  textFont(font,15);
+  textFont(font,25);
   textAlign(CENTER, CENTER);
   
   currentCirc = 0;
@@ -203,6 +198,10 @@ void draw(){
   }
   
   background(0);
+  
+  fill(255,150);
+  text("c  i  r  c  l  e     c  y  c  l  e",width/2,50);
+  text("h i t    t h e    s t a r !",width/2,height-50);r
   
   noFill();
   
@@ -341,6 +340,25 @@ void keyPressed(){
   if (key == 'r' || key == 'R'){
     reset();
   }
+  if (key == 'a'){
+      radius[0]-=4;
+  }
+  if (key == 's'){
+    radius[1]-=4;
+  }
+  if (key == 'd'){
+    radius[2]-=4;
+  }
+  if (key == 'q'){
+    radius[0]+=4;
+  }
+  if (key == 'w'){
+    radius[1]+=4;
+  }
+  if (key == 'e'){
+    radius[2]+=4;
+  }
+  
   if (key == CODED) {
     if (keyCode == UP) {
       radius[currentCirc] = min(radius[currentCirc]+4,300);
