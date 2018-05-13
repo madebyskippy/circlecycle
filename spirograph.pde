@@ -272,11 +272,11 @@ void drawCircle(int i){
     line(centers[i].x,centers[i].y,centers[i+1].x,centers[i+1].y);
   }
   
-  int pitch = (int)((max(radius[i],100)-100)/67);
+  int pitch = constrain((int)((max(radius[i],100)-100)/(200f/4f)),0,3);
   if (pitch != circlePitch[i]){
     circlePitch[i] = pitch;
-    backgNoise[i*3+circlePitch[i]].rewind();
-    backgNoise[i*3+circlePitch[i]].play();
+    backgNoise[i*2+circlePitch[i]].rewind();
+    backgNoise[i*2+circlePitch[i]].play();
   }
 }
 
@@ -298,9 +298,9 @@ void keyPressed(){
   }
   if (key == CODED) {
     if (keyCode == UP) {
-      radius[currentCirc] = min(radius[currentCirc]+1,300);
+      radius[currentCirc] = min(radius[currentCirc]+4,300);
     } else if (keyCode == DOWN) {
-      radius[currentCirc] = max(radius[currentCirc]-1,10);
+      radius[currentCirc] = max(radius[currentCirc]-4,10);
     } else if (keyCode == LEFT) {
       if (currentCirc == 0){
         currentCirc = 2;
